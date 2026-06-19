@@ -1,847 +1,1555 @@
 <!DOCTYPE html>
-<html lang="ru">
+<html lang="ru" id="htmlRoot">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dynas AI</title>
+    <title>Dynas — разработчик AI и ботов</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;600;700&display=swap" rel="stylesheet">
+    <link rel="icon" href="avatar_dynas.png" type="image/png">
     <style>
+        /* ===== БАЗОВЫЕ ПЕРЕМЕННЫЕ ===== */
+        :root {
+            --bg: #0a0a0a;
+            --text: #e0e0e0;
+            --card: rgba(255, 255, 255, 0.015);
+            --border: rgba(0, 255, 200, 0.04);
+            --border-hover: rgba(0, 255, 200, 0.12);
+            --glow: rgba(0, 255, 200, 0.06);
+            --btn-bg: linear-gradient(135deg, #00ffc8, #0066ff);
+            --shadow: rgba(0, 0, 0, 0.3);
+            --code-bg: rgba(0, 255, 200, 0.02);
+        }
+
+        [data-theme="light"] {
+            --bg: #f5f5f5;
+            --text: #1a1a1a;
+            --card: rgba(0, 0, 0, 0.02);
+            --border: rgba(0, 0, 0, 0.04);
+            --border-hover: rgba(0, 255, 200, 0.2);
+            --glow: rgba(0, 255, 200, 0.08);
+            --shadow: rgba(0, 0, 0, 0.05);
+            --code-bg: rgba(0, 0, 0, 0.02);
+        }
+
         * { margin: 0; padding: 0; box-sizing: border-box; }
 
+        html { scroll-behavior: smooth; }
+
         body {
-            font-family: 'Segoe UI', sans-serif;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
-            color: white;
-            overflow: hidden;
-            background: #0a0a0a;
+            font-family: 'Space Grotesk', sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            transition: background 0.4s, color 0.4s;
+            overflow-x: hidden;
+            line-height: 1.6;
         }
 
-        #particles-canvas {
+        .container { max-width: 1100px; margin: 0 auto; padding: 0 24px; }
+
+        /* ===== НЕОНОВЫЙ КУРСОР ===== */
+        .cursor-dot {
+            width: 8px; height: 8px;
+            background: #00ffc8;
+            border-radius: 50%;
             position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            z-index: 0;
+            pointer-events: none;
+            z-index: 9999;
+            transition: transform 0.15s ease, opacity 0.3s;
+            mix-blend-mode: difference;
         }
 
-        .container {
-            background: rgba(18, 18, 18, 0.9);
-            padding: 24px;
-            border-radius: 24px;
+        .cursor-ring {
+            width: 40px; height: 40px;
+            border: 1.5px solid rgba(0, 255, 200, 0.25);
+            border-radius: 50%;
+            position: fixed;
+            pointer-events: none;
+            z-index: 9998;
+            transition: transform 0.25s ease, opacity 0.3s;
+            mix-blend-mode: difference;
+        }
+
+        /* ===== ПРОГРЕСС-БАР ===== */
+        .scroll-progress {
+            position: fixed;
+            top: 0; left: 0;
+            width: 0%; height: 3px;
+            background: linear-gradient(90deg, #00ffc8, #0066ff);
+            z-index: 9997;
+            transition: width 0.1s;
+        }
+
+        /* ===== ФОН ===== */
+        .bg-grid {
+            position: fixed;
+            top: 0; left: 0;
+            width: 100vw; height: 100vh;
+            z-index: -2;
+            background: var(--bg);
+            transition: background 0.4s;
+        }
+
+        .bg-grid::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            background-image:
+                linear-gradient(rgba(0, 255, 200, 0.03) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(0, 255, 200, 0.03) 1px, transparent 1px);
+            background-size: 40px 40px;
+        }
+
+        .glow-orb {
+            position: fixed;
+            width: 400px; height: 400px;
+            border-radius: 50%;
+            filter: blur(120px);
+            z-index: -1;
+            animation: orbFloat 12s infinite alternate ease-in-out;
+        }
+
+        .glow-orb.g1 {
+            background: rgba(0, 255, 200, 0.06);
+            top: -100px; right: -100px;
+        }
+
+        .glow-orb.g2 {
+            background: rgba(0, 100, 255, 0.06);
+            bottom: -100px; left: -100px;
+            animation-delay: 4s;
+        }
+
+        @keyframes orbFloat {
+            0% { transform: translate(0, 0) scale(1); }
+            100% { transform: translate(60px, 40px) scale(1.2); }
+        }
+
+        /* ===== 3D-КОНТЕЙНЕР ===== */
+        #three-container {
+            position: fixed;
+            top: 0; left: 0;
+            width: 100vw; height: 100vh;
+            z-index: -1;
+            pointer-events: none;
+            opacity: 0.5;
+        }
+
+        /* ===== ШАПКА ===== */
+        .header {
+            padding: 20px 0;
+            position: fixed;
             width: 100%;
-            max-width: 500px;
-            border: 1px solid rgba(255, 60, 60, 0.3);
-            box-shadow: 0 0 60px rgba(255, 0, 0, 0.15);
+            top: 0;
+            z-index: 50;
+            background: rgba(var(--bg), 0.7);
+            backdrop-filter: blur(16px);
+            border-bottom: 1px solid var(--border);
+            transition: background 0.4s, border-color 0.4s;
+        }
+
+        .header .container {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            font-size: 1.6rem;
+            font-weight: 700;
+            color: var(--text);
+            text-decoration: none;
+            letter-spacing: 1px;
+            transition: color 0.4s;
+        }
+
+        .logo span {
+            background: linear-gradient(135deg, #00ffc8, #0066ff);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .nav a {
+            color: #888;
+            text-decoration: none;
+            margin-left: 32px;
+            font-size: 0.85rem;
+            font-weight: 400;
+            transition: 0.3s;
+        }
+
+        .nav a:hover { color: #00ffc8; }
+
+        .nav .cta {
+            background: linear-gradient(135deg, #00ffc8, #0066ff);
+            color: #0a0a0a;
+            padding: 8px 24px;
+            border-radius: 20px;
+            font-weight: 600;
+            -webkit-text-fill-color: #0a0a0a;
+        }
+
+        .nav .cta:hover { opacity: 0.8; transform: scale(1.02); }
+
+        /* ===== ТЕМА ===== */
+        .theme-toggle {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            z-index: 100;
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 30px;
+            padding: 10px 16px;
+            color: var(--text);
+            font-size: 1.2rem;
+            cursor: pointer;
+            backdrop-filter: blur(8px);
+            transition: 0.3s;
+        }
+
+        .theme-toggle:hover { border-color: #00ffc8; transform: scale(1.05); }
+
+        /* ===== ГЕРОЙ ===== */
+        .hero {
+            padding: 140px 0 80px;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
             position: relative;
             z-index: 1;
         }
 
-        .header { text-align: center; margin-bottom: 20px; }
-        .header h1 { color: #ff3b3b; font-size: 28px; letter-spacing: 2px; }
-        .header p { color: #aaa; font-size: 14px; }
-
-        .chat-box {
-            background: rgba(26, 26, 26, 0.9);
-            padding: 16px;
-            border-radius: 16px;
-            min-height: 350px;
-            max-height: 400px;
-            overflow-y: auto;
-            margin-bottom: 16px;
-            border: 1px solid #2a2a2a;
+        .hero-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 60px;
+            align-items: center;
         }
 
-        .message {
-            padding: 10px 16px;
-            border-radius: 12px;
-            margin: 6px 0;
-            max-width: 80%;
-            word-wrap: break-word;
-        }
-
-        .message.user { background: #ff3b3b; color: white; margin-left: auto; }
-        .message.bot { background: #2a2a2a; color: #eee; margin-right: auto; border-left: 3px solid #ff3b3b; }
-        .message.loading { background: #2a2a2a; color: #888; font-style: italic; }
-        .message.local { background: #1a2a44; color: #4fc3ff; border-left: 3px solid #4fc3ff; }
-
-        .input-area {
-            display: flex;
-            gap: 8px;
-            flex-wrap: wrap;
-        }
-
-        .input-area input {
-            flex: 1;
-            min-width: 120px;
-            padding: 12px;
-            background: rgba(26, 26, 26, 0.9);
-            border: 1px solid #333;
-            border-radius: 12px;
-            color: white;
-            font-size: 16px;
-            outline: none;
-        }
-
-        .input-area input:focus { border-color: #ff3b3b; }
-
-        .input-area button {
-            padding: 12px 16px;
-            background: #ff3b3b;
-            border: none;
-            border-radius: 12px;
-            color: white;
-            font-size: 18px;
-            cursor: pointer;
-            transition: 0.3s;
-            min-width: 48px;
-        }
-
-        .input-area button:hover { background: #cc0000; transform: scale(1.05); }
-
-        .voice-status { margin-top: 12px; color: #888; font-size: 13px; text-align: center; }
-
-        .local-btn {
+        .hero-text .badge {
             display: inline-block;
-            margin-top: 12px;
-            padding: 10px 20px;
-            background: #0066ff;
-            color: white;
+            background: rgba(0, 255, 200, 0.06);
+            border: 1px solid rgba(0, 255, 200, 0.1);
+            padding: 4px 18px;
+            border-radius: 20px;
+            font-size: 0.7rem;
+            color: #00ffc8;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            margin-bottom: 16px;
+        }
+
+        .hero-text h1 {
+            font-size: 3.8rem;
+            font-weight: 700;
+            line-height: 1.1;
+            margin-bottom: 20px;
+            color: var(--text);
+            transition: color 0.4s;
+        }
+
+        .hero-text h1 .glitch {
+            background: linear-gradient(135deg, #00ffc8, #0066ff);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .hero-text p {
+            color: #888;
+            max-width: 440px;
+            font-size: 1.05rem;
+            margin-bottom: 32px;
+        }
+
+        .btn-primary {
+            display: inline-block;
+            background: linear-gradient(135deg, #00ffc8, #0066ff);
+            color: #0a0a0a;
+            padding: 14px 40px;
+            font-weight: 700;
             border-radius: 30px;
             text-decoration: none;
-            font-weight: bold;
+            transition: 0.4s;
+            border: none;
+            cursor: pointer;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 12px 40px rgba(0, 255, 200, 0.15);
+            opacity: 0.9;
+        }
+
+        .btn-ghost {
+            display: inline-block;
+            padding: 14px 36px;
+            border: 1px solid var(--border);
+            border-radius: 30px;
+            color: var(--text);
+            text-decoration: none;
+            margin-left: 12px;
+            transition: 0.4s;
+        }
+
+        .btn-ghost:hover { border-color: #00ffc8; color: #00ffc8; }
+
+        .hero-image {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .hero-image .code-box {
+            background: var(--code-bg);
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            padding: 40px 32px;
+            font-family: 'Space Grotesk', monospace;
+            font-size: 1.1rem;
+            color: #00ffc8;
+            width: 100%;
+            max-width: 380px;
+            position: relative;
+            box-shadow: 0 20px 60px var(--shadow);
+            transition: background 0.4s, border-color 0.4s, box-shadow 0.4s;
+        }
+
+        .hero-image .code-box::before {
+            content: '// dynas.dev';
+            position: absolute;
+            top: -12px;
+            left: 20px;
+            background: var(--bg);
+            padding: 0 12px;
+            font-size: 0.7rem;
+            color: #666;
+            transition: background 0.4s;
+        }
+
+        .hero-image .code-box .line { display: block; margin: 6px 0; }
+        .hero-image .code-box .line .kw { color: #0066ff; }
+        .hero-image .code-box .line .fn { color: #00ffc8; }
+        .hero-image .code-box .line .str { color: #ff6b6b; }
+
+        /* ===== СЧЁТЧИКИ ===== */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 30px;
+            padding: 40px 0 60px;
+            border-top: 1px solid var(--border);
+            border-bottom: 1px solid var(--border);
+            margin: 20px 0;
+        }
+
+        .stat-item { text-align: center; }
+
+        .stat-number {
+            font-size: 3.2rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, #00ffc8, #0066ff);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .stat-label { color: #666; font-size: 0.85rem; }
+
+        /* ===== СЕКЦИИ ===== */
+        section { padding: 80px 0; border-top: 1px solid var(--border); transition: border-color 0.4s; }
+
+        .section-title {
+            font-size: 2.6rem;
+            font-weight: 700;
+            margin-bottom: 12px;
+            color: var(--text);
+            transition: color 0.4s;
+        }
+
+        .section-title span {
+            background: linear-gradient(135deg, #00ffc8, #0066ff);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .section-sub { color: #666; max-width: 500px; margin-bottom: 40px; }
+
+        /* ===== НАВЫКИ ===== */
+        .skills-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 20px;
+        }
+
+        .skill-item {
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 24px 20px;
+            text-align: center;
+            transition: 0.4s;
+            cursor: default;
+        }
+
+        .skill-item:hover {
+            border-color: var(--border-hover);
+            transform: translateY(-4px);
+        }
+
+        .skill-item .icon {
+            font-size: 2.2rem;
+            display: block;
+            margin-bottom: 8px;
             transition: 0.3s;
         }
 
-        .local-btn:hover { background: #0044cc; transform: scale(1.05); }
+        .skill-item:hover .icon { transform: scale(1.15) rotate(-6deg); }
+
+        .skill-item h4 {
+            font-weight: 600;
+            font-size: 1rem;
+            color: var(--text);
+            transition: color 0.4s;
+        }
+
+        .skill-item p { color: #666; font-size: 0.8rem; margin-top: 4px; }
+
+        /* ===== ПРОЕКТЫ ===== */
+        .projects-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 24px;
+        }
+
+        .project-item {
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 28px 24px;
+            transition: 0.4s;
+        }
+
+        .project-item:hover {
+            border-color: var(--border-hover);
+            transform: translateY(-6px);
+            box-shadow: 0 20px 40px var(--shadow);
+        }
+
+        .project-item .emoji {
+            font-size: 2.4rem;
+            display: block;
+            margin-bottom: 8px;
+        }
+
+        .project-item h3 {
+            font-weight: 600;
+            font-size: 1.05rem;
+            color: var(--text);
+            transition: color 0.4s;
+        }
+
+        .project-item p { color: #888; font-size: 0.9rem; margin-top: 4px; }
+
+        /* ===== ТАРИФЫ ===== */
+        #pricing {
+            background: var(--card);
+            border-top: 1px solid var(--border);
+            border-bottom: 1px solid var(--border);
+            transition: background 0.4s, border-color 0.4s;
+        }
+
+        .pricing-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 24px;
+            margin-top: 20px;
+        }
+
+        .pricing-card {
+            background: var(--bg);
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            padding: 32px 24px;
+            text-align: center;
+            transition: 0.4s;
+            position: relative;
+        }
+
+        .pricing-card:hover {
+            border-color: #00ffc8;
+            transform: translateY(-8px);
+            box-shadow: 0 20px 60px var(--shadow);
+        }
+
+        .pricing-card.featured {
+            border-color: #00ffc8;
+            box-shadow: 0 0 40px rgba(0, 255, 200, 0.05);
+        }
+
+        .pricing-badge {
+            display: inline-block;
+            background: rgba(0, 255, 200, 0.06);
+            border: 1px solid rgba(0, 255, 200, 0.1);
+            padding: 4px 16px;
+            border-radius: 20px;
+            font-size: 0.7rem;
+            color: #00ffc8;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            margin-bottom: 16px;
+        }
+
+        .pricing-card.featured .pricing-badge {
+            background: rgba(0, 255, 200, 0.12);
+            border-color: rgba(0, 255, 200, 0.2);
+        }
+
+        .pricing-price {
+            font-size: 2.8rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, #00ffc8, #0066ff);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 20px;
+        }
+
+        .pricing-features {
+            list-style: none;
+            text-align: left;
+            padding: 0;
+            margin-bottom: 24px;
+        }
+
+        .pricing-features li {
+            padding: 8px 0;
+            color: var(--text);
+            font-size: 0.95rem;
+            border-bottom: 1px solid var(--border);
+            transition: color 0.4s, border-color 0.4s;
+        }
+
+        .pricing-features li:last-child { border-bottom: none; }
+
+        .pricing-btn {
+            width: 100%;
+            padding: 12px !important;
+            text-align: center;
+            display: block;
+        }
+
+        /* ===== ОТЗЫВЫ ===== */
+        .reviews-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+            gap: 24px;
+            margin-top: 20px;
+        }
+
+        .review-card {
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            padding: 28px 24px;
+            transition: 0.4s;
+        }
+
+        .review-card:hover { border-color: var(--border-hover); }
+
+        .review-card .stars { color: #00ffc8; margin-bottom: 12px; }
+
+        .review-card blockquote {
+            font-style: italic;
+            color: #b0b0b0;
+            margin-bottom: 16px;
+        }
+
+        .review-card .author {
+            font-weight: 600;
+            color: var(--text);
+            transition: color 0.4s;
+        }
+
+        /* ===== CTA ===== */
+        .cta-block {
+            text-align: center;
+            padding: 80px 0;
+            background: linear-gradient(145deg, #0f0f0f, #0a0a0a);
+            border-top: 1px solid var(--border);
+            border-bottom: 1px solid var(--border);
+            transition: background 0.4s, border-color 0.4s;
+        }
+
+        [data-theme="light"] .cta-block {
+            background: linear-gradient(145deg, #eeeeee, #f5f5f5);
+        }
+
+        .cta-block h2 {
+            font-size: 2.8rem;
+            color: var(--text);
+            transition: color 0.4s;
+        }
+
+        .cta-block p {
+            color: #666;
+            max-width: 480px;
+            margin: 0 auto 32px;
+        }
+
+        /* ===== КОНТАКТЫ ===== */
+        .contacts-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 60px;
+            align-items: center;
+        }
+
+        .contacts-info .label { color: #666; font-size: 0.8rem; display: block; }
+
+        .contacts-info p {
+            margin-bottom: 16px;
+            font-size: 1.05rem;
+            color: var(--text);
+            transition: color 0.4s;
+        }
+
+        .contacts-info a { color: #00ffc8; text-decoration: none; }
+
+        .map-container {
+            border-radius: 16px;
+            overflow: hidden;
+            min-height: 240px;
+            border: 1px solid var(--border);
+            transition: border-color 0.4s;
+        }
+
+        .map-container iframe {
+            width: 100%;
+            height: 100%;
+            min-height: 240px;
+            border: 0;
+        }
+
+        /* ===== ПОДВАЛ ===== */
+        .footer {
+            padding: 40px 0;
+            text-align: center;
+            color: #444;
+            font-size: 0.85rem;
+            border-top: 1px solid var(--border);
+            transition: border-color 0.4s;
+        }
+
+        .footer .socials {
+            display: flex;
+            justify-content: center;
+            gap: 24px;
+            margin-top: 12px;
+        }
+
+        .footer .socials a {
+            color: #444;
+            text-decoration: none;
+            transition: 0.3s;
+        }
+
+        .footer .socials a:hover { color: #00ffc8; }
+
+        /* ===== REVEAL ===== */
+        .reveal {
+            opacity: 0;
+            transform: translateY(40px);
+            transition: opacity 0.8s ease, transform 0.8s ease;
+        }
+
+        .reveal.visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        /* ===== АДАПТИВ ===== */
+        @media (max-width: 992px) {
+            .hero-grid { grid-template-columns: 1fr; text-align: center; gap: 40px; }
+            .hero-text p { margin: 0 auto 32px; }
+            .hero-text h1 { font-size: 2.8rem; }
+            .hero-image .code-box { max-width: 100%; }
+            .skills-grid { grid-template-columns: 1fr 1fr; }
+            .projects-grid { grid-template-columns: 1fr 1fr; }
+            .pricing-grid { grid-template-columns: 1fr 1fr; }
+            .contacts-grid { grid-template-columns: 1fr; }
+            .stats-grid { grid-template-columns: 1fr; }
+        }
+
+        @media (max-width: 768px) {
+            .header .container { flex-direction: column; gap: 12px; }
+            .nav a { margin: 0 12px; font-size: 0.8rem; }
+            .hero { padding-top: 130px; }
+            .hero-text h1 { font-size: 2.2rem; }
+            .section-title { font-size: 2rem; }
+            .skills-grid { grid-template-columns: 1fr; }
+            .projects-grid { grid-template-columns: 1fr; }
+            .pricing-grid { grid-template-columns: 1fr; }
+            .cta-block h2 { font-size: 2rem; }
+            .theme-toggle { bottom: 16px; right: 16px; padding: 8px 14px; font-size: 1rem; }
+        }
+
+        /* Отключаем кастомный курсор на мобилках */
+        @media (max-width: 768px) {
+            .cursor-dot, .cursor-ring { display: none; }
+        }
     </style>
 </head>
 <body>
-    <canvas id="particles-canvas"></canvas>
 
-    <div class="container">
-        <div class="header">
-            <h1>🧠 Dynas AI</h1>
-            <p>Твой голосовой помощник</p>
+    <!-- ===== НЕОНОВЫЙ КУРСОР ===== -->
+    <div class="cursor-dot" id="cursorDot"></div>
+    <div class="cursor-ring" id="cursorRing"></div>
+
+    <!-- ===== ПРОГРЕСС-БАР ===== -->
+    <div class="scroll-progress" id="scrollProgress"></div>
+
+    <!-- ===== ФОН ===== -->
+    <div class="bg-grid"></div>
+    <div class="glow-orb g1"></div>
+    <div class="glow-orb g2"></div>
+
+    <!-- ===== 3D-СЦЕНА ===== -->
+    <div id="three-container"></div>
+
+    <!-- ===== ПЕРЕКЛЮЧАТЕЛЬ ТЕМЫ ===== -->
+    <button class="theme-toggle" id="themeToggle">🌙</button>
+
+    <!-- ===== ШАПКА ===== -->
+    <header class="header">
+        <div class="container">
+            <a href="#" class="logo">Dynas<span>.</span></a>
+            <nav class="nav">
+                <a href="#skills">Навыки</a>
+                <a href="#projects">Проекты</a>
+                <a href="#pricing">Цены</a>
+                <a href="#contacts">Контакты</a>
+                <a href="#cta" class="cta">Связаться</a>
+            </nav>
+        </div>
+    </header>
+
+    <!-- ===== ГЕРОЙ ===== -->
+    <section class="hero">
+        <div class="container">
+            <div class="hero-grid">
+                <div class="hero-text">
+                    <div class="badge">✦ разработчик</div>
+                    <h1>Создаю <span class="glitch">цифровые продукты</span></h1>
+                    <p>Telegram-боты, AI-помощники, сайты. Превращаю идеи в работающий код.</p>
+                    <div>
+                        <a href="#cta" class="btn-primary">Написать</a>
+                        <a href="#projects" class="btn-ghost">Проекты</a>
+                    </div>
+                </div>
+                <div class="hero-image">
+                    <div class="code-box">
+                        <span class="line"><span class="kw">const</span> dynas = {</span>
+                        <span class="line">  <span class="fn">skills</span>: [<span class="str">'Python'</span>, <span class="str">'AI'</span>, <span class="str">'JS'</span>],</span>
+                        <span class="line">  <span class="fn">projects</span>: <span class="str">4</span>,</span>
+                        <span class="line">  <span class="fn">clients</span>: <span class="str">100%</span></span>
+                        <span class="line">};</span>
+                        <span class="line"><span class="kw">await</span> <span class="fn">build</span>(dynas);</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ===== СЧЁТЧИКИ ===== -->
+    <section>
+        <div class="container">
+            <div class="stats-grid">
+                <div class="stat-item reveal">
+                    <div class="stat-number" data-target="4">0</div>
+                    <div class="stat-label">проектов создано</div>
+                </div>
+                <div class="stat-item reveal">
+                    <div class="stat-number" data-target="100">0</div>
+                    <div class="stat-label">% довольных клиентов</div>
+                </div>
+                <div class="stat-item reveal">
+                    <div class="stat-number" data-target="2026">0</div>
+                    <div class="stat-label">год начала</div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ===== НАВЫКИ ===== -->
+    <section id="skills">
+        <div class="container">
+            <div class="reveal">
+                <h2 class="section-title">Навыки <span>▸</span></h2>
+                <p class="section-sub">Технологии, которые я использую в работе</p>
+            </div>
+            <div class="skills-grid">
+                <div class="skill-item reveal"><span class="icon">🐍</span><h4>Python</h4><p>Backend, автоматизация</p></div>
+                <div class="skill-item reveal"><span class="icon">🧠</span><h4>AI / ChatGPT</h4><p>Интеграция нейросетей</p></div>
+                <div class="skill-item reveal"><span class="icon">🌐</span><h4>HTML / CSS</h4><p>Сайты-визитки</p></div>
+                <div class="skill-item reveal"><span class="icon">🤖</span><h4>Telegram боты</h4><p>Под ключ, с оплатой</p></div>
+                <div class="skill-item reveal"><span class="icon">⚡</span><h4>JavaScript</h4><p>Интерактив на сайтах</p></div>
+                <div class="skill-item reveal"><span class="icon">🎤</span><h4>Голосовые AI</h4><p>Ассистенты и чат-боты</p></div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ===== ПРОЕКТЫ ===== -->
+    <section id="projects">
+        <div class="container">
+            <div class="reveal">
+                <h2 class="section-title">Проекты <span>▸</span></h2>
+                <p class="section-sub">Работающие продукты, которые я создал</p>
+            </div>
+            <div class="projects-grid">
+                <div class="project-item reveal">
+                    <span class="emoji">🧠</span>
+                    <h3>Dynas AI</h3>
+                    <p>Голосовой помощник с AI, погодой и мемами</p>
+                </div>
+                <div class="project-item reveal">
+                    <span class="emoji">🤖</span>
+                    <h3>Telegram-бот</h3>
+                    <p>Умный бот с ChatGPT для бизнеса</p>
+                </div>
+                <div class="project-item reveal">
+                    <span class="emoji">🌤️</span>
+                    <h3>Погодный сервис</h3>
+                    <p>Виджет с голосовым вводом</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ===== ТАРИФЫ ===== -->
+    <section id="pricing">
+        <div class="container">
+            <div class="section-header reveal">
+                <h2 class="section-title">Тарифы <span>▸</span></h2>
+                <p class="section-sub">Выбери подходящий пакет для своего проекта</p>
+            </div>
+            <div class="pricing-grid">
+                <div class="pricing-card reveal">
+                    <div class="pricing-badge">Старт</div>
+                    <div class="pricing-price">2 000 ₽</div>
+                    <ul class="pricing-features">
+                        <li>✅ Telegram-бот под ключ</li>
+                        <li>✅ До 5 команд</li>
+                        <li>✅ Базовая логика</li>
+                        <li>✅ Инструкция по запуску</li>
+                    </ul>
+                    <a href="https://t.me/user_webrat" target="_blank" class="btn-primary pricing-btn">Заказать</a>
+                </div>
+
+                <div class="pricing-card reveal featured">
+                    <div class="pricing-badge">🔥 Популярный</div>
+                    <div class="pricing-price">5 000 ₽</div>
+                    <ul class="pricing-features">
+                        <li>✅ Всё из «Старт»</li>
+                        <li>✅ AI / ChatGPT интеграция</li>
+                        <li>✅ До 15 команд</li>
+                        <li>✅ Голосовые ответы</li>
+                        <li>✅ 1 месяц поддержки</li>
+                    </ul>
+                    <a href="https://t.me/user_webrat" target="_blank" class="btn-primary pricing-btn">Заказать</a>
+                </div>
+
+                <div class="pricing-card reveal">
+                    <div class="pricing-badge">Премиум</div>
+                    <div class="pricing-price">10 000 ₽</div>
+                    <ul class="pricing-features">
+                        <li>✅ Всё из «Стандарт»</li>
+                        <li>✅ Сайт-визитка в подарок</li>
+                        <li>✅ Полная автоматизация</li>
+                        <li>✅ 6 месяцев поддержки</li>
+                        <li>✅ Обновления бесплатно</li>
+                    </ul>
+                    <a href="https://t.me/user_webrat" target="_blank" class="btn-primary pricing-btn">Заказать</a>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ===== ОТЗЫВЫ ===== -->
+    <section id="reviews">
+        <div class="container">
+            <div class="section-header reveal">
+                <h2 class="section-title">Отзывы <span>▸</span></h2>
+                <p class="section-sub">Что говорят те, кто уже работает со мной</p>
+            </div>
+            <div class="reviews-grid">
+                <div class="review-card reveal">
+                    <div class="stars">⭐ ⭐ ⭐ ⭐ ⭐</div>
+                    <blockquote>«Сделал бота за 1 день! Работает отлично, всем советую.»</blockquote>
+                    <div class="author">— Алексей</div>
+                </div>
+                <div class="review-card reveal">
+                    <div class="stars">⭐ ⭐ ⭐ ⭐ ⭐</div>
+                    <blockquote>«Классный сайт! Быстро, красиво, всё как я хотел.»</blockquote>
+                    <div class="author">— Мария</div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ===== CTA ===== -->
+    <section class="cta-block" id="cta">
+        <div class="container">
+            <div class="reveal">
+                <h2>Есть идея?</h2>
+                <p>Напиши мне — я превращу её в работающий продукт.</p>
+                <a href="https://t.me/user_webrat" target="_blank" class="btn-primary">📩 Написать</a>
+            </div>
+        </div>
+    </section>
+
+    <!-- ===== КОНТАКТЫ ===== -->
+    <section id="contacts">
+        <div class="container">
+            <div class="contacts-grid">
+                <div class="contacts-info reveal">
+                    <h2 style="font-size: 2rem; font-weight: 700; margin-bottom: 20px; color: var(--text); transition: color 0.4s;">Контакты</h2>
+                    <p><span class="label">📩 Telegram</span> <a href="https://t.me/user_webrat" target="_blank">@user_webrat</a></p>
+                    <p><span class="label">🌐 Сайт</span> <a href="#">Dynas-ai.github.io</a></p>
+                </div>
+                <div class="map-container reveal">
+                    <iframe src="https://yandex.ru/maps/?ll=49.707866%2C52.974842&z=17" allowfullscreen loading="lazy"></iframe>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ===== ПОДВАЛ ===== -->
+    <footer class="footer">
+        <div class="container">
+            <p>© 2026 Dynas — цифровой разработчик</p>
+            <div class="socials">
+                <a href="#">GitHub</a>
+                <a href="#">Instagram</a>
+                <a href="#">VK</a>
+            </div>
+        </div>
+    </footer>
+
+    <!-- ===== 3D ===== -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+
+    <!-- ===== AI-КОНСУЛЬТАНТ (встроен в сайт) ===== -->
+    <style>
+        /* ===== AI-КОНСУЛЬТАНТ ===== */
+        .consultant-toggle {
+            position: fixed;
+            bottom: 100px;
+            right: 30px;
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #00ffc8, #0066ff);
+            border: none;
+            color: #0a0a0a;
+            font-size: 28px;
+            cursor: pointer;
+            box-shadow: 0 8px 30px rgba(0, 255, 200, 0.2);
+            transition: 0.3s;
+            z-index: 999;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .consultant-toggle:hover {
+            transform: scale(1.1);
+            box-shadow: 0 12px 40px rgba(0, 255, 200, 0.3);
+        }
+
+        .consultant-chat {
+            position: fixed;
+            bottom: 170px;
+            right: 30px;
+            width: 380px;
+            max-width: 90vw;
+            max-height: 580px;
+            background: #0f0f0f;
+            border: 1px solid rgba(0, 255, 200, 0.1);
+            border-radius: 24px;
+            padding: 20px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.6);
+            z-index: 999;
+            display: none;
+            flex-direction: column;
+            backdrop-filter: blur(16px);
+        }
+
+        .consultant-chat.open {
+            display: flex;
+        }
+
+        .consultant-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid rgba(0, 255, 200, 0.05);
+        }
+
+        .consultant-header h3 {
+            font-size: 1rem;
+            font-weight: 600;
+            color: #e0e0e0;
+            margin: 0;
+        }
+
+        .consultant-header .close-btn {
+            background: none;
+            border: none;
+            color: #666;
+            font-size: 1.4rem;
+            cursor: pointer;
+            transition: 0.3s;
+        }
+
+        .consultant-header .close-btn:hover {
+            color: #fff;
+        }
+
+        .consultant-messages {
+            flex: 1;
+            overflow-y: auto;
+            max-height: 260px;
+            margin-bottom: 10px;
+            padding-right: 4px;
+        }
+
+        .consultant-messages::-webkit-scrollbar {
+            width: 3px;
+        }
+        .consultant-messages::-webkit-scrollbar-thumb {
+            background: #00ffc8;
+            border-radius: 10px;
+        }
+
+        .consultant-msg {
+            padding: 10px 14px;
+            border-radius: 16px;
+            margin-bottom: 8px;
+            max-width: 85%;
+            font-size: 0.9rem;
+            animation: msgSlide 0.3s ease;
+        }
+
+        .consultant-msg.user {
+            background: linear-gradient(135deg, #00ffc8, #0066ff);
+            color: #0a0a0a;
+            margin-left: auto;
+            font-weight: 500;
+        }
+
+        .consultant-msg.bot {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(0, 255, 200, 0.05);
+            color: #e0e0e0;
+        }
+
+        .consultant-msg.bot .msg-icon {
+            margin-right: 6px;
+        }
+
+        .consultant-questions {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+            margin-top: 6px;
+            margin-bottom: 10px;
+        }
+
+        .consultant-questions button {
+            background: rgba(0, 255, 200, 0.06);
+            border: 1px solid rgba(0, 255, 200, 0.08);
+            border-radius: 20px;
+            padding: 6px 14px;
+            color: #b0b0b0;
+            font-size: 0.75rem;
+            cursor: pointer;
+            transition: 0.3s;
+            white-space: nowrap;
+        }
+
+        .consultant-questions button:hover {
+            background: rgba(0, 255, 200, 0.12);
+            border-color: #00ffc8;
+            color: #00ffc8;
+            transform: translateY(-2px);
+        }
+
+        .consultant-input-area {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+            border-top: 1px solid rgba(0, 255, 200, 0.05);
+            padding-top: 10px;
+        }
+
+        .consultant-input-area input {
+            flex: 1;
+            padding: 10px 14px;
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(0, 255, 200, 0.06);
+            border-radius: 30px;
+            color: #e0e0e0;
+            font-size: 0.9rem;
+            outline: none;
+            transition: 0.3s;
+        }
+
+        .consultant-input-area input:focus {
+            border-color: #00ffc8;
+        }
+
+        .consultant-input-area input::placeholder {
+            color: #555;
+        }
+
+        .consultant-input-area button {
+            background: none;
+            border: none;
+            color: #00ffc8;
+            font-size: 1.2rem;
+            cursor: pointer;
+            transition: 0.3s;
+            padding: 6px;
+        }
+
+        .consultant-input-area button:hover {
+            transform: scale(1.1);
+        }
+
+        .consultant-input-area .mic-btn {
+            color: #666;
+        }
+
+        .consultant-input-area .mic-btn.listening {
+            color: #ff6b6b;
+            animation: pulse 1s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.2); }
+        }
+
+        @keyframes msgSlide {
+            from { opacity: 0; transform: translateY(8px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @media (max-width: 600px) {
+            .consultant-chat {
+                bottom: 150px;
+                right: 10px;
+                width: calc(100vw - 20px);
+                max-height: 70vh;
+            }
+            .consultant-toggle {
+                bottom: 80px;
+                right: 16px;
+                width: 52px;
+                height: 52px;
+                font-size: 24px;
+            }
+            .consultant-questions button {
+                font-size: 0.7rem;
+                padding: 4px 10px;
+            }
+        }
+    </style>
+
+    <button class="consultant-toggle" id="consultantToggle">🧠</button>
+
+    <div class="consultant-chat" id="consultantChat">
+        <div class="consultant-header">
+            <h3>🧠 Dynas AI</h3>
+            <button class="close-btn" id="consultantClose">✕</button>
+        </div>
+        <div class="consultant-messages" id="consultantMessages">
+            <div class="consultant-msg bot">
+                <span class="msg-icon">👋</span> Привет! Я AI-консультант Dynas. Могу помочь с выбором тарифа, ответить на вопросы или принять заявку.
+            </div>
         </div>
 
-        <div class="chat-box" id="chatBox">
-            <div class="message bot">Привет! Напиши или скажи что-нибудь</div>
+        <div class="consultant-questions" id="consultantQuestions">
+            <button data-question="Сколько стоят услуги?">💰 Цены</button>
+            <button data-question="Что ты умеешь?">🧠 Услуги</button>
+            <button data-question="Какие сроки?">⏳ Сроки</button>
+            <button data-question="Хочу заказать">🤖 Заказать</button>
         </div>
 
-        <div class="input-area">
-            <input type="text" id="userInput" placeholder="Напиши сообщение..." />
-            <button id="sendBtn">➤</button>
-            <button id="voiceBtn">🎤</button>
-            <button id="weatherBtn">🌤️</button>
-            <button id="memeBtn">🎭</button>
+        <div class="consultant-input-area">
+            <input type="text" id="consultantInput" placeholder="Напиши вопрос..." />
+            <button class="mic-btn" id="consultantMic">🎤</button>
+            <button id="consultantSend">➤</button>
         </div>
-
-        <div class="voice-status" id="voiceStatus">⚡ Нажми 🎤 и говори</div>
     </div>
 
     <script>
-        // === ЭЛЕМЕНТЫ ===
-        const chatBox = document.getElementById('chatBox');
-        const userInput = document.getElementById('userInput');
-        const sendBtn = document.getElementById('sendBtn');
-        const voiceBtn = document.getElementById('voiceBtn');
-        const voiceStatus = document.getElementById('voiceStatus');
-        const weatherBtn = document.getElementById('weatherBtn');
-        const memeBtn = document.getElementById('memeBtn');
+        (function() {
+            // ===== НАСТРОЙКИ (ЗАМЕНИ НА СВОИ) =====
+            const BOT_TOKEN = '8866673557:AAGV19OrnGCa-xVB_teeKEFmmwy8Caw7jU4';
+            const ADMIN_ID = 8622960510;
 
-        // === ЧАСТИЦЫ ===
-        const canvas = document.getElementById('particles-canvas');
-        const ctx = canvas.getContext('2d');
+            // ===== ЭЛЕМЕНТЫ =====
+            const toggleBtn = document.getElementById('consultantToggle');
+            const chatWindow = document.getElementById('consultantChat');
+            const closeBtn = document.getElementById('consultantClose');
+            const messages = document.getElementById('consultantMessages');
+            const input = document.getElementById('consultantInput');
+            const sendBtn = document.getElementById('consultantSend');
+            const micBtn = document.getElementById('consultantMic');
+            const questionBtns = document.querySelectorAll('#consultantQuestions button');
 
-        function resizeCanvas() {
-            canvas.width = window.innerWidth;
-            canvas.height = window.innerHeight;
-        }
-        resizeCanvas();
-        window.addEventListener('resize', resizeCanvas);
+            let isOpen = false;
+            let isListening = false;
+            let recognition = null;
+            let waitingForContact = false;
 
-        const particles = [];
-        for (let i = 0; i < 100; i++) {
-            particles.push({
-                x: Math.random() * canvas.width,
-                y: Math.random() * canvas.height,
-                radius: Math.random() * 2 + 1,
-                speedX: (Math.random() - 0.5) * 0.6,
-                speedY: (Math.random() - 0.5) * 0.6,
-            });
-        }
+            // ===== ОТПРАВКА В TELEGRAM =====
+            function sendToTelegram(name, phone, question) {
+                const text = '📩 НОВАЯ ЗАЯВКА\n\n👤 Имя: ' + name + '\n📞 Телефон: ' + phone + '\n📝 Вопрос: ' + question;
+                const url = 'https://api.telegram.org/bot' + BOT_TOKEN + '/sendMessage?chat_id=' + ADMIN_ID + '&text=' +
+                    encodeURIComponent(text);
 
-        function drawParticles() {
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
-            particles.forEach(p => {
-                p.x += p.speedX;
-                p.y += p.speedY;
-                if (p.x < 0) p.x = canvas.width;
-                if (p.x > canvas.width) p.x = 0;
-                if (p.y < 0) p.y = canvas.height;
-                if (p.y > canvas.height) p.y = 0;
-                ctx.beginPath();
-                ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2);
-                ctx.fillStyle = 'rgba(255, 60, 60, 0.6)';
-                ctx.fill();
-            });
-            requestAnimationFrame(drawParticles);
-        }
-        drawParticles();
-
-        // === ПРОВЕРКА OLLAMA ===
-        let ollamaActive = false;
-
-        async function checkOllama() {
-            try {
-                const response = await fetch('http://localhost:11434/api/generate', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        model: 'llama3.2:3b',
-                        prompt: 'Привет',
-                        stream: false,
-                        max_tokens: 5
+                fetch(url)
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.ok) {
+                            addMessage('✅ Заявка отправлена! Я свяжусь с тобой в ближайшее время.', 'bot');
+                        } else {
+                            addMessage('❌ Ошибка отправки. Попробуй позже или напиши в Telegram @user_webrat.', 'bot');
+                        }
                     })
-                });
-                if (response.ok) {
-                    ollamaActive = true;
-                    console.log('✅ Ollama доступен');
-                } else {
-                    ollamaActive = false;
-                    console.log('❌ Ollama не отвечает');
-                }
-            } catch (error) {
-                ollamaActive = false;
-                console.log('❌ Ollama не запущен');
-            }
-        }
-
-        // Проверяем при загрузке
-        checkOllama();
-
-        // === УМНЫЙ ОТВЕТ ===
-        async function getBotReply(text) {
-            if (!ollamaActive) {
-                return '⚠️ AI не доступен. Чтобы включить:\n1. Открой командную строку\n2. Введи `ollama serve`\n3. Обнови страницу';
+                    .catch(() => {
+                        addMessage('❌ Ошибка соединения. Попробуй позже.', 'bot');
+                    });
             }
 
-            try {
-                const response = await fetch('http://localhost:11434/api/generate', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        model: 'llama3.2:3b',
-                        prompt: 'Ты дружелюбный AI-помощник. Отвечай кратко, понятно, с эмодзи. Вопрос: ' + text,
-                        stream: false,
-                        max_tokens: 200
-                    })
-                });
-
-                const data = await response.json();
-                return data.response || '❌ Не удалось получить ответ.';
-            } catch (error) {
-                return '❌ Ошибка: убедись, что Ollama запущен (команда "ollama serve" в отдельном окне).';
-            }
-        }
-
-        // === ОТПРАВКА ===
-        function addMessage(text, sender) {
-            const msg = document.createElement('div');
-            msg.className = 'message ' + sender;
-            msg.textContent = text;
-            chatBox.appendChild(msg);
-            chatBox.scrollTop = chatBox.scrollHeight;
-            return msg;
-        }
-
-        async function sendMessage() {
-            const text = userInput.value.trim();
-            if (!text) return;
-
-            addMessage(text, 'user');
-            userInput.value = '';
-            const loadingMsg = addMessage('⏳ Думаю...', 'loading');
-
-            try {
-                const reply = await getBotReply(text);
-                loadingMsg.remove();
-                addMessage(reply, 'bot');
-                speak(reply);
-            } catch (error) {
-                loadingMsg.remove();
-                addMessage('❌ Ошибка: ' + error.message, 'bot');
-            }
-        }
-
-        // === ПОГОДА ===
-        weatherBtn.addEventListener('click', () => {
-            const city = userInput.value.trim();
-            if (!city) {
-                addMessage('⚠️ Напиши город, например: Москва', 'bot');
-                return;
-            }
-
-            const apiKey = '4a600e0c01c5849d020c173b018a4743';
-            const url = `https://api.openweathermap.org/data/2.5/weather?q=${city}&appid=${apiKey}&units=metric&lang=ru`;
-
-            fetch(url)
-                .then(response => response.json())
-                .then(data => {
-                    if (data.cod === 200) {
-                        const temp = Math.round(data.main.temp);
-                        const desc = data.weather[0].description;
-                        const feels = Math.round(data.main.feels_like);
-                        addMessage(`🌤️ Погода в ${city}: ${desc}, ${temp}°C (ощущается как ${feels}°C)`, 'bot');
-                    } else {
-                        addMessage(`❌ Город "${city}" не найден. Проверь написание.`, 'bot');
-                    }
-                })
-                .catch(() => {
-                    addMessage('❌ Ошибка подключения к серверу погоды', 'bot');
-                });
-        });
-
-        // === МЕМЫ ===
-        memeBtn.addEventListener('click', () => {
-            const text = userInput.value.trim();
-            if (!text) {
-                addMessage('✏️ Напиши текст для мема', 'bot');
-                return;
-            }
-
-            const loadingMsg = addMessage('🎨 Готовлю мем...', 'loading');
-            const img = document.createElement('img');
-            img.src = 'https://i.imgflip.com/1bij.jpg';
-            img.style.maxWidth = '100%';
-            img.style.borderRadius = '12px';
-            img.style.marginTop = '8px';
-
-            loadingMsg.remove();
-            const msg = document.createElement('div');
-            msg.className = 'message bot';
-            msg.innerHTML = `🎭 Твой мем (${text}):<br>`;
-            msg.appendChild(img);
-            chatBox.appendChild(msg);
-            chatBox.scrollTop = chatBox.scrollHeight;
-        });
-
-        // === ГОЛОС ===
-        function startVoice() {
-            if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) {
-                voiceStatus.textContent = '❌ Голос не поддерживается';
-                return;
-            }
-
-            const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-            const recognition = new SpeechRecognition();
-            recognition.lang = 'ru-RU';
-            recognition.continuous = false;
-            recognition.interimResults = false;
-
-            voiceStatus.textContent = '🎤 Слушаю... Говори!';
-            voiceBtn.style.background = '#00cc00';
-
-            recognition.start();
-
-            recognition.onresult = (event) => {
-                const text = event.results[0][0].transcript;
-                userInput.value = text;
-                voiceStatus.textContent = '✅ Распознано: "' + text + '"';
-                voiceBtn.style.background = '#ff3b3b';
-                sendMessage();
-            };
-
-            recognition.onerror = (event) => {
-                voiceStatus.textContent = '❌ Ошибка: ' + event.error;
-                voiceBtn.style.background = '#ff3b3b';
-            };
-
-            recognition.onend = () => {
-                voiceStatus.textContent = '⚡ Нажми 🎤 и говори';
-                voiceBtn.style.background = '#ff3b3b';
-            };
-        }
-
-        function speak(text) {
-            if ('speechSynthesis' in window) {
-                const utterance = new SpeechSynthesisUtterance(text);
-                utterance.lang = 'ru-RU';
-                utterance.rate = 1.0;
-                utterance.pitch = 1.0;
-                speechSynthesis.cancel();
-                speechSynthesis.speak(utterance);
-            }
-        }
-
-        // === СОБЫТИЯ ===
-        sendBtn.addEventListener('click', sendMessage);
-        userInput.addEventListener('keydown', (e) => {
-            if (e.key === 'Enter') sendMessage();
-        });
-        voiceBtn.addEventListener('click', startVoice);
-    </script><!-- ===== AI-КОНСУЛЬТАНТ ДЛЯ САЙТА ===== -->
-<style>
-    .consultant-toggle {
-        position: fixed;
-        bottom: 100px;
-        right: 30px;
-        width: 60px;
-        height: 60px;
-        border-radius: 50%;
-        background: linear-gradient(135deg, #00ffc8, #0066ff);
-        border: none;
-        color: #0a0a0a;
-        font-size: 28px;
-        cursor: pointer;
-        box-shadow: 0 8px 30px rgba(0, 255, 200, 0.2);
-        transition: 0.3s;
-        z-index: 999;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-    }
-
-    .consultant-toggle:hover {
-        transform: scale(1.1);
-        box-shadow: 0 12px 40px rgba(0, 255, 200, 0.3);
-    }
-
-    .consultant-chat {
-        position: fixed;
-        bottom: 170px;
-        right: 30px;
-        width: 380px;
-        max-width: 90vw;
-        max-height: 580px;
-        background: #0f0f0f;
-        border: 1px solid rgba(0, 255, 200, 0.1);
-        border-radius: 24px;
-        padding: 20px;
-        box-shadow: 0 20px 60px rgba(0, 0, 0, 0.6);
-        z-index: 999;
-        display: none;
-        flex-direction: column;
-        backdrop-filter: blur(16px);
-    }
-
-    .consultant-chat.open {
-        display: flex;
-    }
-
-    .consultant-header {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        margin-bottom: 12px;
-        padding-bottom: 10px;
-        border-bottom: 1px solid rgba(0, 255, 200, 0.05);
-    }
-
-    .consultant-header h3 {
-        font-size: 1rem;
-        font-weight: 600;
-        color: #e0e0e0;
-        margin: 0;
-    }
-
-    .consultant-header .close-btn {
-        background: none;
-        border: none;
-        color: #666;
-        font-size: 1.4rem;
-        cursor: pointer;
-        transition: 0.3s;
-    }
-
-    .consultant-header .close-btn:hover {
-        color: #fff;
-    }
-
-    .consultant-messages {
-        flex: 1;
-        overflow-y: auto;
-        max-height: 260px;
-        margin-bottom: 10px;
-        padding-right: 4px;
-    }
-
-    .consultant-messages::-webkit-scrollbar {
-        width: 3px;
-    }
-    .consultant-messages::-webkit-scrollbar-thumb {
-        background: #00ffc8;
-        border-radius: 10px;
-    }
-
-    .consultant-msg {
-        padding: 10px 14px;
-        border-radius: 16px;
-        margin-bottom: 8px;
-        max-width: 85%;
-        font-size: 0.9rem;
-        animation: msgSlide 0.3s ease;
-    }
-
-    .consultant-msg.user {
-        background: linear-gradient(135deg, #00ffc8, #0066ff);
-        color: #0a0a0a;
-        margin-left: auto;
-        font-weight: 500;
-    }
-
-    .consultant-msg.bot {
-        background: rgba(255, 255, 255, 0.03);
-        border: 1px solid rgba(0, 255, 200, 0.05);
-        color: #e0e0e0;
-    }
-
-    .consultant-msg.bot .msg-icon {
-        margin-right: 6px;
-    }
-
-    .consultant-questions {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 6px;
-        margin-top: 6px;
-        margin-bottom: 10px;
-    }
-
-    .consultant-questions button {
-        background: rgba(0, 255, 200, 0.06);
-        border: 1px solid rgba(0, 255, 200, 0.08);
-        border-radius: 20px;
-        padding: 6px 14px;
-        color: #b0b0b0;
-        font-size: 0.75rem;
-        cursor: pointer;
-        transition: 0.3s;
-        white-space: nowrap;
-    }
-
-    .consultant-questions button:hover {
-        background: rgba(0, 255, 200, 0.12);
-        border-color: #00ffc8;
-        color: #00ffc8;
-        transform: translateY(-2px);
-    }
-
-    .consultant-input-area {
-        display: flex;
-        gap: 8px;
-        align-items: center;
-        border-top: 1px solid rgba(0, 255, 200, 0.05);
-        padding-top: 10px;
-    }
-
-    .consultant-input-area input {
-        flex: 1;
-        padding: 10px 14px;
-        background: rgba(255, 255, 255, 0.03);
-        border: 1px solid rgba(0, 255, 200, 0.06);
-        border-radius: 30px;
-        color: #e0e0e0;
-        font-size: 0.9rem;
-        outline: none;
-        transition: 0.3s;
-    }
-
-    .consultant-input-area input:focus {
-        border-color: #00ffc8;
-    }
-
-    .consultant-input-area input::placeholder {
-        color: #555;
-    }
-
-    .consultant-input-area button {
-        background: none;
-        border: none;
-        color: #00ffc8;
-        font-size: 1.2rem;
-        cursor: pointer;
-        transition: 0.3s;
-        padding: 6px;
-    }
-
-    .consultant-input-area button:hover {
-        transform: scale(1.1);
-    }
-
-    .consultant-input-area .mic-btn {
-        color: #666;
-    }
-
-    .consultant-input-area .mic-btn.listening {
-        color: #ff6b6b;
-        animation: pulse 1s infinite;
-    }
-
-    @keyframes pulse {
-        0%, 100% { transform: scale(1); }
-        50% { transform: scale(1.2); }
-    }
-
-    @keyframes msgSlide {
-        from { opacity: 0; transform: translateY(8px); }
-        to { opacity: 1; transform: translateY(0); }
-    }
-
-    /* Адаптив */
-    @media (max-width: 600px) {
-        .consultant-chat {
-            bottom: 150px;
-            right: 10px;
-            width: calc(100vw - 20px);
-            max-height: 70vh;
-        }
-        .consultant-toggle {
-            bottom: 80px;
-            right: 16px;
-            width: 52px;
-            height: 52px;
-            font-size: 24px;
-        }
-        .consultant-questions button {
-            font-size: 0.7rem;
-            padding: 4px 10px;
-        }
-    }
-</style>
-
-<button class="consultant-toggle" id="consultantToggle">🧠</button>
-
-<div class="consultant-chat" id="consultantChat">
-    <div class="consultant-header">
-        <h3>🧠 Dynas AI</h3>
-        <button class="close-btn" id="consultantClose">✕</button>
-    </div>
-    <div class="consultant-messages" id="consultantMessages">
-        <div class="consultant-msg bot">
-            <span class="msg-icon">👋</span> Привет! Я AI-консультант Dynas. Могу помочь с выбором тарифа, ответить на вопросы или принять заявку.
-        </div>
-    </div>
-
-    <div class="consultant-questions" id="consultantQuestions">
-        <button data-question="Сколько стоят услуги?">💰 Цены</button>
-        <button data-question="Что ты умеешь?">🧠 Услуги</button>
-        <button data-question="Какие сроки?">⏳ Сроки</button>
-        <button data-question="Хочу заказать">🤖 Заказать</button>
-    </div>
-
-    <div class="consultant-input-area">
-        <input type="text" id="consultantInput" placeholder="Напиши вопрос..." />
-        <button class="mic-btn" id="consultantMic">🎤</button>
-        <button id="consultantSend">➤</button>
-    </div>
-</div>
-
-<script>
-    (function() {
-        // ===== НАСТРОЙКИ =====
-        const BOT_TOKEN = 'ТВОЙ_ТОКЕН_ОТ_BOTFATHER'; // вставь сюда
-        const ADMIN_ID = 123456789; // вставь свой ID
-
-        // ===== ЭЛЕМЕНТЫ =====
-        const toggleBtn = document.getElementById('consultantToggle');
-        const chatWindow = document.getElementById('consultantChat');
-        const closeBtn = document.getElementById('consultantClose');
-        const messages = document.getElementById('consultantMessages');
-        const input = document.getElementById('consultantInput');
-        const sendBtn = document.getElementById('consultantSend');
-        const micBtn = document.getElementById('consultantMic');
-        const questionBtns = document.querySelectorAll('#consultantQuestions button');
-
-        let isOpen = false;
-        let isListening = false;
-        let recognition = null;
-        let waitingForContact = false;
-
-        // ===== ФУНКЦИЯ ОТПРАВКИ В TELEGRAM =====
-        function sendToTelegram(name, phone, question) {
-            const text = `📩 НОВАЯ ЗАЯВКА\n\n👤 Имя: ${name}\n📞 Телефон: ${phone}\n📝 Вопрос: ${question}`;
-            const url = `https://api.telegram.org/bot${BOT_TOKEN}/sendMessage?chat_id=${ADMIN_ID}&text=${encodeURIComponent(text)}`;
-
-            fetch(url)
-                .then(response => response.json())
-                .then(data => {
-                    if (data.ok) {
-                        addMessage('✅ Заявка отправлена! Я свяжусь с тобой в ближайшее время.', 'bot');
-                    } else {
-                        addMessage('❌ Ошибка отправки. Попробуй позже или напиши в Telegram @user_webrat.', 'bot');
-                    }
-                })
-                .catch(() => {
-                    addMessage('❌ Ошибка соединения. Попробуй позже.', 'bot');
-                });
-        }
-
-        // ===== ОТКРЫТЬ / ЗАКРЫТЬ =====
-        toggleBtn.addEventListener('click', () => {
-            isOpen = !isOpen;
-            chatWindow.classList.toggle('open', isOpen);
-            if (isOpen) input.focus();
-        });
-
-        closeBtn.addEventListener('click', () => {
-            isOpen = false;
-            chatWindow.classList.remove('open');
-        });
-
-        // ===== ОТПРАВКА СООБЩЕНИЯ =====
-        function sendMessage(text) {
-            const msgText = text || input.value.trim();
-            if (!msgText) return;
-
-            addMessage(msgText, 'user');
-            if (!text) input.value = '';
-
-            // Если ждём контактные данные
-            if (waitingForContact) {
-                const lines = msgText.split('\n');
-                const name = lines[0] || 'Не указано';
-                const phone = lines[1] || 'Не указан';
-                const question = 'Заявка через консультанта';
-                sendToTelegram(name, phone, question);
-                waitingForContact = false;
-                return;
-            }
-
-            const loading = addMessage('⏳', 'bot');
-            setTimeout(() => {
-                const reply = getBotReply(msgText);
-                loading.remove();
-                addMessage(reply, 'bot');
-                speak(reply);
-            }, 400);
-        }
-
-        function addMessage(text, sender) {
-            const msg = document.createElement('div');
-            msg.className = 'consultant-msg ' + sender;
-            if (sender === 'bot' && text !== '⏳') {
-                msg.innerHTML = '<span class="msg-icon">🤖</span> ' + text;
-            } else {
-                msg.textContent = text;
-            }
-            messages.appendChild(msg);
-            messages.scrollTop = messages.scrollHeight;
-            return msg;
-        }
-
-        // ===== БАЗА ЗНАНИЙ =====
-        function getBotReply(text) {
-            const lower = text.toLowerCase();
-
-            if (lower.includes('привет') || lower.includes('здравствуй')) {
-                return 'Привет! 👋 Я AI-консультант Dynas. Могу помочь с выбором тарифа, ответить на вопросы или принять заявку. Спрашивай!';
-            }
-            if (lower.includes('цена') || lower.includes('сколько') || lower.includes('стоимость')) {
-                return '💰 Вот мои тарифы:\n\n— Старт: 2 000 ₽ (бот под ключ)\n— Популярный: 5 000 ₽ (бот + AI)\n— Премиум: 10 000 ₽ (бот + AI + сайт в подарок)\n\nПодробнее на сайте в разделе "Тарифы".';
-            }
-            if (lower.includes('услуг') || lower.includes('умеешь') || lower.includes('делаешь')) {
-                return '🧠 Я создаю:\n— Telegram-ботов под ключ\n— AI-помощников (голосовые, умные)\n— Сайты-визитки\n— Автоматизацию для бизнеса\n\nЛюбую идею превращаю в работающий код!';
-            }
-            if (lower.includes('срок') || lower.includes('долго')) {
-                return '⏳ Обычно проект занимает 1–3 дня. Всё зависит от сложности и обратной связи. Делаю быстро, но качественно!';
-            }
-            if (lower.includes('заказать') || lower.includes('хочу') || lower.includes('сделать')) {
-                waitingForContact = true;
-                return '🤖 Отлично! Напиши в ответном сообщении:\n1. Твоё имя\n2. Номер телефона\n\nЯ свяжусь с тобой в ближайшее время!';
-            }
-            if (lower.includes('спасибо')) {
-                return '❤️ Всегда пожалуйста! Если будут вопросы — я здесь.';
-            }
-            if (lower.includes('пока')) {
-                return '👋 Пока! Буду ждать тебя снова. Удачи!';
-            }
-
-            return '🤔 Хм... Я ещё учусь, но ты можешь спросить про цены, услуги или нажать кнопку "Заказать" — я соберу заявку и передам её автору.';
-        }
-
-        // ===== КЛИК ПО КНОПКАМ =====
-        questionBtns.forEach(btn => {
-            btn.addEventListener('click', () => sendMessage(btn.dataset.question));
-        });
-
-        // ===== ГОЛОС =====
-        if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
-            const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-            recognition = new SpeechRecognition();
-            recognition.lang = 'ru-RU';
-            recognition.continuous = false;
-            recognition.interimResults = false;
-
-            recognition.onresult = (event) => {
-                const text = event.results[0][0].transcript;
-                input.value = text;
-                micBtn.classList.remove('listening');
-                micBtn.textContent = '🎤';
-                isListening = false;
-                sendMessage(text);
-            };
-
-            recognition.onerror = () => {
-                micBtn.classList.remove('listening');
-                micBtn.textContent = '🎤';
-                isListening = false;
-                addMessage('❌ Не удалось распознать голос.', 'bot');
-            };
-
-            recognition.onend = () => {
-                micBtn.classList.remove('listening');
-                micBtn.textContent = '🎤';
-                isListening = false;
-            };
-        }
-
-        micBtn.addEventListener('click', () => {
-            if (!recognition) {
-                addMessage('❌ Голосовой ввод не поддерживается.', 'bot');
-                return;
-            }
-            if (isListening) {
-                recognition.stop();
-                micBtn.classList.remove('listening');
-                micBtn.textContent = '🎤';
-                isListening = false;
-                return;
-            }
-            isListening = true;
-            micBtn.textContent = '⏹️';
-            micBtn.classList.add('listening');
-            recognition.start();
-        });
-
-        // ===== ГОЛОСОВОЙ ОТВЕТ =====
-        function speak(text) {
-            if ('speechSynthesis' in window) {
-                const utterance = new SpeechSynthesisUtterance(text);
-                utterance.lang = 'ru-RU';
-                utterance.rate = 0.95;
-                utterance.pitch = 1.0;
-                speechSynthesis.cancel();
-                speechSynthesis.speak(utterance);
-            }
-        }
-
-        // ===== СОБЫТИЯ =====
-        sendBtn.addEventListener('click', () => sendMessage());
-        input.addEventListener('keydown', (e) => {
-            if (e.key === 'Enter') sendMessage();
-        });
-
-        document.addEventListener('click', (e) => {
-            if (isOpen && !chatWindow.contains(e.target) && e.target !== toggleBtn) {
+            // ===== ОТКРЫТЬ / ЗАКРЫТЬ =====
+            toggleBtn.addEventListener('click', () => {
+                isOpen = !isOpen;
+                chatWindow.classList.toggle('open', isOpen);
+                if (isOpen) input.focus();
+            });
+
+            closeBtn.addEventListener('click', () => {
                 isOpen = false;
                 chatWindow.classList.remove('open');
+            });
+
+            // ===== ОТПРАВКА =====
+            function sendMessage(text) {
+                const msgText = text || input.value.trim();
+                if (!msgText) return;
+
+                addMessage(msgText, 'user');
+                if (!text) input.value = '';
+
+                if (waitingForContact) {
+                    const lines = msgText.split('\n');
+                    const name = lines[0] || 'Не указано';
+                    const phone = lines[1] || 'Не указан';
+                    const question = 'Заявка через консультанта';
+                    sendToTelegram(name, phone, question);
+                    waitingForContact = false;
+                    return;
+                }
+
+                const loading = addMessage('⏳', 'bot');
+                setTimeout(() => {
+                    const reply = getBotReply(msgText);
+                    loading.remove();
+                    addMessage(reply, 'bot');
+                    speak(reply);
+                }, 400);
             }
+
+            function addMessage(text, sender) {
+                const msg = document.createElement('div');
+                msg.className = 'consultant-msg ' + sender;
+                if (sender === 'bot' && text !== '⏳') {
+                    msg.innerHTML = '<span class="msg-icon">🤖</span> ' + text;
+                } else {
+                    msg.textContent = text;
+                }
+                messages.appendChild(msg);
+                messages.scrollTop = messages.scrollHeight;
+                return msg;
+            }
+
+            // ===== БАЗА ЗНАНИЙ =====
+            function getBotReply(text) {
+                const lower = text.toLowerCase();
+
+                if (lower.includes('привет') || lower.includes('здравствуй')) {
+                    return 'Привет! 👋 Я AI-консультант Dynas. Могу помочь с выбором тарифа, ответить на вопросы или принять заявку. Спрашивай!';
+                }
+                if (lower.includes('цена') || lower.includes('сколько') || lower.includes('стоимость')) {
+                    return '💰 Вот мои тарифы:\n\n— Старт: 2 000 ₽ (бот под ключ)\n— Популярный: 5 000 ₽ (бот + AI)\n— Премиум: 10 000 ₽ (бот + AI + сайт в подарок)\n\nПодробнее на сайте в разделе "Тарифы".';
+                }
+                if (lower.includes('услуг') || lower.includes('умеешь') || lower.includes('делаешь')) {
+                    return '🧠 Я создаю:\n— Telegram-ботов под ключ\n— AI-помощников (голосовые, умные)\n— Сайты-визитки\n— Автоматизацию для бизнеса\n\nЛюбую идею превращаю в работающий код!';
+                }
+                if (lower.includes('срок') || lower.includes('долго')) {
+                    return '⏳ Обычно проект занимает 1–3 дня. Всё зависит от сложности и обратной связи. Делаю быстро, но качественно!';
+                }
+                if (lower.includes('заказать') || lower.includes('хочу') || lower.includes('сделать')) {
+                    waitingForContact = true;
+                    return '🤖 Отлично! Напиши в ответном сообщении:\n1. Твоё имя\n2. Номер телефона\n\nЯ свяжусь с тобой в ближайшее время!';
+                }
+                if (lower.includes('спасибо')) {
+                    return '❤️ Всегда пожалуйста! Если будут вопросы — я здесь.';
+                }
+                if (lower.includes('пока')) {
+                    return '👋 Пока! Буду ждать тебя снова. Удачи!';
+                }
+
+                return '🤔 Хм... Я ещё учусь, но ты можешь спросить про цены, услуги или нажать кнопку "Заказать" — я соберу заявку и передам её автору.';
+            }
+
+            // ===== КЛИК ПО КНОПКАМ =====
+            questionBtns.forEach(btn => {
+                btn.addEventListener('click', () => sendMessage(btn.dataset.question));
+            });
+
+            // ===== ГОЛОС =====
+            if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
+                const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+                recognition = new SpeechRecognition();
+                recognition.lang = 'ru-RU';
+                recognition.continuous = false;
+                recognition.interimResults = false;
+
+                recognition.onresult = (event) => {
+                    const text = event.results[0][0].transcript;
+                    input.value = text;
+                    micBtn.classList.remove('listening');
+                    micBtn.textContent = '🎤';
+                    isListening = false;
+                    sendMessage(text);
+                };
+
+                recognition.onerror = () => {
+                    micBtn.classList.remove('listening');
+                    micBtn.textContent = '🎤';
+                    isListening = false;
+                    addMessage('❌ Не удалось распознать голос.', 'bot');
+                };
+
+                recognition.onend = () => {
+                    micBtn.classList.remove('listening');
+                    micBtn.textContent = '🎤';
+                    isListening = false;
+                };
+            }
+
+            micBtn.addEventListener('click', () => {
+                if (!recognition) {
+                    addMessage('❌ Голосовой ввод не поддерживается.', 'bot');
+                    return;
+                }
+                if (isListening) {
+                    recognition.stop();
+                    micBtn.classList.remove('listening');
+                    micBtn.textContent = '🎤';
+                    isListening = false;
+                    return;
+                }
+                isListening = true;
+                micBtn.textContent = '⏹️';
+                micBtn.classList.add('listening');
+                recognition.start();
+            });
+
+            // ===== ГОЛОСОВОЙ ОТВЕТ =====
+            function speak(text) {
+                if ('speechSynthesis' in window) {
+                    const utterance = new SpeechSynthesisUtterance(text);
+                    utterance.lang = 'ru-RU';
+                    utterance.rate = 0.95;
+                    utterance.pitch = 1.0;
+                    speechSynthesis.cancel();
+                    speechSynthesis.speak(utterance);
+                }
+            }
+
+            // ===== СОБЫТИЯ =====
+            sendBtn.addEventListener('click', () => sendMessage());
+            input.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter') sendMessage();
+            });
+
+            document.addEventListener('click', (e) => {
+                if (isOpen && !chatWindow.contains(e.target) && e.target !== toggleBtn) {
+                    isOpen = false;
+                    chatWindow.classList.remove('open');
+                }
+            });
+        })();
+    </script>
+
+    <!-- ===== ОСНОВНЫЕ СКРИПТЫ ===== -->
+    <script>
+        // ============================================================
+        // 1. 3D-КУБ
+        // ============================================================
+        (function() {
+            const container = document.getElementById('three-container');
+            const scene = new THREE.Scene();
+            const camera = new THREE.PerspectiveCamera(40, container.clientWidth / container.clientHeight, 0.1, 1000);
+            camera.position.set(2, 2, 5);
+            camera.lookAt(0, 0, 0);
+
+            const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+            renderer.setSize(container.clientWidth, container.clientHeight);
+            renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+            container.appendChild(renderer.domElement);
+
+            const geometry = new THREE.BoxGeometry(1.6, 1.6, 1.6);
+            const material = new THREE.MeshStandardMaterial({
+                color: 0x00ffc8,
+                wireframe: true,
+                transparent: true,
+                opacity: 0.2,
+                emissive: 0x0066ff,
+                emissiveIntensity: 0.05,
+            });
+            const cube = new THREE.Mesh(geometry, material);
+            scene.add(cube);
+
+            const ambientLight = new THREE.AmbientLight(0x404060);
+            scene.add(ambientLight);
+            const dirLight = new THREE.DirectionalLight(0xffffff, 0.5);
+            dirLight.position.set(1, 2, 1);
+            scene.add(dirLight);
+
+            let time = 0;
+
+            function animate() {
+                requestAnimationFrame(animate);
+                time += 0.01;
+                cube.rotation.x = Math.sin(time * 0.3) * 0.2;
+                cube.rotation.y += 0.008;
+                cube.rotation.z = Math.cos(time * 0.2) * 0.1;
+                renderer.render(scene, camera);
+            }
+            animate();
+
+            window.addEventListener('resize', () => {
+                const w = container.clientWidth;
+                const h = container.clientHeight;
+                camera.aspect = w / h;
+                camera.updateProjectionMatrix();
+                renderer.setSize(w, h);
+            });
+        })();
+
+
+        // ============================================================
+        // 2. НЕОНОВЫЙ КУРСОР
+        // ============================================================
+        const dot = document.getElementById('cursorDot');
+        const ring = document.getElementById('cursorRing');
+
+        document.addEventListener('mousemove', (e) => {
+            dot.style.transform = 'translate(' + (e.clientX - 4) + 'px, ' + (e.clientY - 4) + 'px)';
+            ring.style.transform = 'translate(' + (e.clientX - 20) + 'px, ' + (e.clientY - 20) + 'px)';
         });
-    })();
+
+        document.querySelectorAll('a, button').forEach(el => {
+            el.addEventListener('mouseenter', () => {
+                dot.style.transform = 'scale(0.5)';
+                ring.style.transform = 'scale(1.5)';
+                ring.style.borderColor = 'rgba(0, 255, 200, 0.6)';
+            });
+            el.addEventListener('mouseleave', () => {
+                dot.style.transform = 'scale(1)';
+                ring.style.transform = 'scale(1)';
+                ring.style.borderColor = 'rgba(0, 255, 200, 0.25)';
+            });
+        });
+
+
+        // ============================================================
+        // 3. ПРОГРЕСС-БАР
+        // ============================================================
+        const progressBar = document.getElementById('scrollProgress');
+        window.addEventListener('scroll', () => {
+            const scrollTop = window.scrollY;
+            const height = document.documentElement.scrollHeight - window.innerHeight;
+            progressBar.style.width = (scrollTop / height) * 100 + '%';
+        });
+
+
+        // ============================================================
+        // 4. ТЕМА
+        // ============================================================
+        const toggleBtn = document.getElementById('themeToggle');
+        let isDark = true;
+        toggleBtn.addEventListener('click', () => {
+            isDark = !isDark;
+            document.documentElement.setAttribute('data-theme', isDark ? 'dark' : 'light');
+            toggleBtn.textContent = isDark ? '🌙' : '☀️';
+        });
+        document.documentElement.setAttribute('data-theme', 'dark');
+
+
+        // ============================================================
+        // 5. СЧЁТЧИКИ
+        // ============================================================
+        const counters = document.querySelectorAll('.stat-number');
+        const counterObserver = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    const target = parseInt(entry.target.dataset.target);
+                    animateCounter(entry.target, target);
+                    counterObserver.unobserve(entry.target);
+                }
+            });
+        }, { threshold: 0.5 });
+        counters.forEach(c => counterObserver.observe(c));
+
+        function animateCounter(el, target) {
+            let current = 0;
+            const step = Math.max(1, Math.floor(target / 60));
+            const interval = setInterval(() => {
+                current += step;
+                if (current >= target) {
+                    el.textContent = target;
+                    clearInterval(interval);
+                } else {
+                    el.textContent = current;
+                }
+            }, 20);
+        }
+
+
+        // ============================================================
+        // 6. REVEAL
+        // ============================================================
+        document.addEventListener('DOMContentLoaded', () => {
+            const reveals = document.querySelectorAll('.reveal');
+            const observer = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        entry.target.classList.add('visible');
+                    }
+                });
+            }, { threshold: 0.1, rootMargin: '0px 0px -30px 0px' });
+            reveals.forEach(el => observer.observe(el));
+        });
+    </script>
 </body>
-</script>
 </html>
